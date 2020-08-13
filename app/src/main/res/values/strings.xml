@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Mud</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="trail_name">Name of trail</string>
+    <string name="apiKey">365400f6e771af4ab1d9a5391ce287f0</string>
+</resources>
