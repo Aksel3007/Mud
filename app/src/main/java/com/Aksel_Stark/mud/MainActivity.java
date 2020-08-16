@@ -92,12 +92,16 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
 
 
 
-        //Adding testtrail to populate list (for debugging)
-        Trail TestTrail = new Trail("DKs tag",12.424,56.4634);
-        TrailList.add(TestTrail);
+
 
         ArrayList TL = new ArrayList<Trail>(getTrailsFromDB());
         TrailList = TL;
+
+
+        //Adding testtrail to populate list (for debugging)
+        //Trail TestTrail = new Trail("DKs tag",12.424,56.4634);
+        //TrailList.add(TestTrail);
+
         updateWeatherData();
 
         // set up the RecyclerView
@@ -227,8 +231,6 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
                         //Log.d("TAG","Response"+response); //To test if recieved json (debugging)
                         adapter.notifyDataSetChanged();
                         //Log.d("TAG","Raw weather from trailObj: "+trailObj.getRawWeatherData());
-                        returnTrail = trailObj;
-                        WeatherRecievedFlag = true;
 
                     }
                 }, new Response.ErrorListener() {
@@ -238,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
             }
         });
         queue.add(stringRequest);
-        int sleepCounter = 0;
+        /*int sleepCounter = 0;
         do{
             sleepCounter += 1;
             try{
@@ -247,15 +249,26 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
             }catch(Exception e){
                 Log.d("TAG","Sleep: "+e);
             }
-        }while(!WeatherRecievedFlag && sleepCounter < 10);
+        }while(!WeatherRecievedFlag && sleepCounter < 10); */
 
-        return returnTrail;
+
+        //if the data has not been updated, just return trail as it was
+        if(returnTrail == null){
+
+            Log.d("TAG","Weather data not updated");
+
+            return trailObj;
+        }
+        else {
+            Log.d("TAG","Weather data updated!!!!!!!!!!!!!!!!!!!!!!!!!");
+            return returnTrail;
+        }
     }
 
 
     //Update weather data for all trails in TrailList
     public void updateWeatherData(){
-        Log.d("TAG","updateWeatherData()");
+        Log.d("TAG","updateWeatherData() length of list: " + TrailList.size());
         for (int i = 0;i<TrailList.size();i++){
             Trail T = TrailList.get(i);
 
