@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
     ArrayList<Trail> TrailList = new ArrayList<>();
 
 
-    Trail returnTrail;
+    Trail returnTrail = new Trail();
 
 
     @Override
@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
 
     //API access____________________________________________________________________________________
 
-    public Trail getJsonFromWeatherAPI(double lat, double lon, int start, final Trail trailObj){ //
+    public void getJsonFromWeatherAPI(double lat, double lon, int start, final Trail trailObj){ //
         if(queue==null){
             queue = Volley.newRequestQueue(this);
         }
@@ -218,7 +218,8 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
 
         String url = "https://api.darksky.net/forecast/"+apiKey+"/"+lat+","+lon+","+start;
 
-        Log.d("TAG",url);
+        Log.d("TAG","API URL " + url);
+
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
@@ -228,6 +229,15 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
 
 
                         trailObj.setRawWeatherData(response);
+
+                        saveNewTrailToDB(trailObj);
+
+
+
+                        returnTrail = trailObj;
+
+                        Log.d("TAG","Response from api: " + returnTrail.getRawWeatherData());
+
                         //Log.d("TAG","Response"+response); //To test if recieved json (debugging)
                         adapter.notifyDataSetChanged();
                         //Log.d("TAG","Raw weather from trailObj: "+trailObj.getRawWeatherData());
@@ -240,29 +250,31 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
             }
         });
         queue.add(stringRequest);
-        /*int sleepCounter = 0;
+
+        /* Sleep until data is recieved (data updated in db instead)
+        int sleepCounter = 0;
         do{
             sleepCounter += 1;
             try{
             Thread.sleep(1000);
-            Log.d("TAG","Waiting for api response");
+            Log.d("TAG","Waiting for api response" + returnTrail.getRawWeatherData());
             }catch(Exception e){
                 Log.d("TAG","Sleep: "+e);
             }
-        }while(!WeatherRecievedFlag && sleepCounter < 10); */
+        }while((returnTrail.getRawWeatherData().equals("0")) && (sleepCounter < 10));*/
 
 
-        //if the data has not been updated, just return trail as it was
-        if(returnTrail == null){
+        //if the data has not been updated, just return trail as it was (trail updated in db instead)
+        /*if(returnTrail == null){
 
             Log.d("TAG","Weather data not updated");
 
             return trailObj;
         }
         else {
-            Log.d("TAG","Weather data updated!!!!!!!!!!!!!!!!!!!!!!!!!");
+            Log.d("TAG","Weather data updated. Data: "+ returnTrail.getRawWeatherData());
             return returnTrail;
-        }
+        }*/
     }
 
 
@@ -272,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
         for (int i = 0;i<TrailList.size();i++){
             Trail T = TrailList.get(i);
 
-            T = getJsonFromWeatherAPI(T.latitude,T.longitude,(int)CurrentUnixTime()-milisecsPrDay,T);
+            getJsonFromWeatherAPI(T.latitude,T.longitude,(int)CurrentUnixTime()-milisecsPrDay,T); //Gets the weather data from api. Data is added to room db, so no return.
 
             //Log.d("TAG","Raw weather from trailObj: "+T.getRawWeatherData());
 
@@ -294,6 +306,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
 
         milliseconds = milliseconds + timeZone.getOffset(milliseconds);
 
+        Log.d("TAG","Unix time: "+milliseconds / 1000L);
 
         return milliseconds / 1000L;
     }
