@@ -39,7 +39,7 @@ import java.util.TimeZone;
 
 
 public class MainActivity extends AppCompatActivity implements TrailRecyclerAdapter.ItemClickListener {
-    final int milisecsPrDay = 86400000;
+    final int secsPrDay = 86400;
 
     TrailRecyclerAdapter adapter;
 
@@ -284,7 +284,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
         for (int i = 0;i<TrailList.size();i++){
             Trail T = TrailList.get(i);
 
-            getJsonFromWeatherAPI(T.latitude,T.longitude,(int)CurrentUnixTime()-milisecsPrDay,T); //Gets the weather data from api. Data is added to room db, so no return.
+            getJsonFromWeatherAPI(T.latitude,T.longitude,(int)CurrentUnixTime()-secsPrDay,T); //Gets the weather data from api. Data is added to room db, so no return.
 
             //Log.d("TAG","Raw weather from trailObj: "+T.getRawWeatherData());
 
