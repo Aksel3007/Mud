@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
     EditText trailName;
 
     RequestQueue queue; //For Volley
-    boolean WeatherRecievedFlag = false;
     ArrayList<Trail> TrailList = new ArrayList<>();
 
 

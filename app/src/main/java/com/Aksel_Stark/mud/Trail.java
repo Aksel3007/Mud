@@ -100,13 +100,13 @@ public class Trail implements Serializable {
 
             fullPrecip = zero.getDouble("precipIntensity");
 
+            Log.d("TAG","Precipitation read from json: " + fullPrecip + this.getName());
         }
         catch(Exception e){
             Log.d("TAG","Error reading from json weather data:"+e);
             precipLastDay = -1;
         }
         precipLastDay = fullPrecip*24;
-
     }
 
     public int getId() {
