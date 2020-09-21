@@ -96,11 +96,6 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
         ArrayList TL = new ArrayList<Trail>(getTrailsFromDB());
         TrailList = TL;
 
-
-        //Adding testtrail to populate list (for debugging)
-        //Trail TestTrail = new Trail("DKs tag",12.424,56.4634);
-        //TrailList.add(TestTrail);
-
         updateWeatherData();
 
         // set up the RecyclerView
@@ -158,12 +153,12 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
 
                 Trail newTrail = new Trail(TrailName,longitude,latitude);
                 Log.d("TAG","New trail: " + TrailName + " long: "+ longitude + " lat: "+ latitude);
-                getJsonFromWeatherAPI(latitude,longitude,1584746726, newTrail);
+                //getJsonFromWeatherAPI(latitude,longitude,1584746726, newTrail); //Resulted in duplicate trails
 
                 //Add the new trail to the list, so it can be shown in the recyclerView
                 int newTrailIndex = adapter.getItemCount();
                 TrailList.add(newTrailIndex,newTrail);
-                saveNewTrailToDB(newTrail);
+                //saveNewTrailToDB(newTrail); //Resulted in duplicate trails
                 adapter.notifyItemInserted(newTrailIndex);
 
                 updateWeatherData(); //ToDo: Change to update only new trail data (for efficiency)
