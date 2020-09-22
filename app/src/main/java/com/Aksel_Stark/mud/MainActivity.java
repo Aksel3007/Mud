@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
 
     RequestQueue queue; //For Volley
     ArrayList<Trail> TrailList = new ArrayList<>();
+    RecyclerView recyclerView;
 
 
     Trail returnTrail = new Trail();
@@ -90,16 +91,12 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
         });
 
 
-
-
-
-        ArrayList TL = new ArrayList<Trail>(getTrailsFromDB());
-        TrailList = TL;
+        TrailList = new ArrayList<Trail>(getTrailsFromDB());
 
         updateWeatherData();
 
         // set up the RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.TrailRecyclerViewID);
+        recyclerView = findViewById(R.id.TrailRecyclerViewID);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
 
@@ -141,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
     }
 
 
+
     //Resultat
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -155,19 +153,31 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
                 Log.d("TAG","New trail: " + TrailName + " long: "+ longitude + " lat: "+ latitude);
                 //getJsonFromWeatherAPI(latitude,longitude,1584746726, newTrail); //Resulted in duplicate trails
 
+
+                //Update traillist
+                TrailList.clear();
+                ArrayList TL = new ArrayList<Trail>(getTrailsFromDB());
+                TrailList = TL;
+
                 //Add the new trail to the list, so it can be shown in the recyclerView
                 int newTrailIndex = adapter.getItemCount();
                 TrailList.add(newTrailIndex,newTrail);
                 //saveNewTrailToDB(newTrail); //Resulted in duplicate trails
                 adapter.notifyItemInserted(newTrailIndex);
 
+                adapter.updateTrailList(TrailList);
+                adapter.notifyDataSetChanged();
+
+
                 updateWeatherData(); //ToDo: Change to update only new trail data (for efficiency)
-
-
 
 
                 long currentTime = CurrentUnixTime();
                 Log.d("TAG","Unix time:"+currentTime);
+
+                adapter = new TrailRecyclerAdapter(this, TrailList);
+                adapter.setClickListener(this);
+                recyclerView.setAdapter(adapter);
 
                 //Toast prints longitude (for debugging/testing)
                 Context context = getApplicationContext();
@@ -185,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
 
             TrailList = new ArrayList<Trail>(getTrailsFromDB());
             //updateWeatherData();
-            adapter.notifyDataSetChanged();
+
 
         }
 
@@ -233,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
                         Log.d("TAG","Response from api: " + returnTrail.getRawWeatherData());
 
                         //Log.d("TAG","Response"+response); //To test if recieved json (debugging)
-                        adapter.notifyDataSetChanged();
+
                         //Log.d("TAG","Raw weather from trailObj: "+trailObj.getRawWeatherData());
 
                     }
@@ -245,30 +255,7 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
         });
         queue.add(stringRequest);
 
-        /* Sleep until data is recieved (data updated in db instead)
-        int sleepCounter = 0;
-        do{
-            sleepCounter += 1;
-            try{
-            Thread.sleep(1000);
-            Log.d("TAG","Waiting for api response" + returnTrail.getRawWeatherData());
-            }catch(Exception e){
-                Log.d("TAG","Sleep: "+e);
-            }
-        }while((returnTrail.getRawWeatherData().equals("0")) && (sleepCounter < 10));*/
 
-
-        //if the data has not been updated, just return trail as it was (trail updated in db instead)
-        /*if(returnTrail == null){
-
-            Log.d("TAG","Weather data not updated");
-
-            return trailObj;
-        }
-        else {
-            Log.d("TAG","Weather data updated. Data: "+ returnTrail.getRawWeatherData());
-            return returnTrail;
-        }*/
     }
 
 
@@ -323,9 +310,13 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
                 return null; //?
             }
 
-            @Override
-            protected void onPostExecute(Void aVoid) { //Makes a toast when trail has been added
+            @Override //After trail is added to db, the list of trails is updated so every trail has an ID (Prevents duplicates)
+            protected void onPostExecute(Void aVoid) {
+
                 super.onPostExecute(aVoid);
+
+                TrailList = new ArrayList<Trail>(getTrailsFromDB());
+
 
                 Toast.makeText(getApplicationContext(), "Saved to room DB", Toast.LENGTH_LONG).show();
             }

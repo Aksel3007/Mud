@@ -23,6 +23,10 @@ public class TrailRecyclerAdapter extends RecyclerView.Adapter<TrailRecyclerAdap
         this.mData = data;
     }
 
+    public void updateTrailList(List<Trail> data){
+        this.mData = data;
+    }
+
     // inflates the row layout from xml when needed
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
