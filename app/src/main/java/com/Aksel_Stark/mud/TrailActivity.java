@@ -16,7 +16,9 @@ import java.util.List;
 public class TrailActivity extends AppCompatActivity {
 
     TextView trailName;
+    TextView RainLastDay;
     Button removeButton;
+    Button backButton;
     Intent intentFromMain;
     Trail trail;
 
@@ -26,24 +28,36 @@ public class TrailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trail);
 
-
-
         intentFromMain = getIntent();
         trail = getTrailFromDB();
 
         trailName = findViewById(R.id.TrailName);
+        RainLastDay = findViewById(R.id.RainLastDay);
+        removeButton = findViewById(R.id.removeButton);
+        backButton = findViewById(R.id.BackButton);
+
+
+        trailName.setText(trail.getName());
+
+
+
+
         int t = intentFromMain.getIntExtra("id",-1);
 
 
 
 
-
-        removeButton = findViewById(R.id.removeButton);
-
         removeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 deleteTrail(trail);
+            }
+        });
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
             }
         });
     }
@@ -66,6 +80,13 @@ public class TrailActivity extends AppCompatActivity {
                 Trail trail = DatabaseClient.getInstance(getApplicationContext()).getAppDatabase().trailDao().loadSingle(id);
                 return trail;
             }
+            @Override
+            protected void onPostExecute(Trail trail) {
+                super.onPostExecute(trail);
+                double rain = trail.precipLastDay;
+                RainLastDay.setText("Rain: "+ rain);
+
+            }
 
 
         }
@@ -85,7 +106,7 @@ public class TrailActivity extends AppCompatActivity {
     }
 
 
-//AsyncTast to remove the trail from the database and return to main activity
+    //AsyncTast to remove the trail from the database and return to main activity
     private void deleteTrail(final Trail trail) {
         class DeleteTrail extends AsyncTask<Void, Void, Void> {
 

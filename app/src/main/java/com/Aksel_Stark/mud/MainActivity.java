@@ -149,21 +149,24 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
                 double latitude = data.getDoubleExtra("latitude",0);
                 String TrailName = data.getStringExtra("name");
 
+                //Create the new trail and add it to database
                 Trail newTrail = new Trail(TrailName,longitude,latitude);
-                Log.d("TAG","New trail: " + TrailName + " long: "+ longitude + " lat: "+ latitude);
+                saveNewTrailToDB(newTrail);
+                //Log.d("TAG","New trail: " + TrailName + " long: "+ longitude + " lat: "+ latitude);
                 //getJsonFromWeatherAPI(latitude,longitude,1584746726, newTrail); //Resulted in duplicate trails
 
 
                 //Update traillist
                 TrailList.clear();
-                ArrayList TL = new ArrayList<Trail>(getTrailsFromDB());
+                ArrayList TL = new ArrayList<Trail>(getTrailsFromDB()); //Refreshes TrailList (new list includes new trail)
                 TrailList = TL;
 
                 //Add the new trail to the list, so it can be shown in the recyclerView
                 int newTrailIndex = adapter.getItemCount();
-                TrailList.add(newTrailIndex,newTrail);
+                //TrailList.add(newTrailIndex,newTrail);
+
                 //saveNewTrailToDB(newTrail); //Resulted in duplicate trails
-                adapter.notifyItemInserted(newTrailIndex);
+                //adapter.notifyItemInserted(newTrailIndex);
 
                 adapter.updateTrailList(TrailList);
                 adapter.notifyDataSetChanged();
@@ -179,22 +182,30 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
                 adapter.setClickListener(this);
                 recyclerView.setAdapter(adapter);
 
-                //Toast prints longitude (for debugging/testing)
-                Context context = getApplicationContext();
-                CharSequence text = "Longitude: "+ longitude;
-                int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
-
-
             }
 
         }
         else if (requestCode == 200){
             Log.d("TAG","returned to main with requestcode 200");
 
-            TrailList = new ArrayList<Trail>(getTrailsFromDB());
-            //updateWeatherData();
+            //Update traillist
+            TrailList.clear();
+            ArrayList TL = new ArrayList<Trail>(getTrailsFromDB()); //Refreshes TrailList (new list includes new trail)
+            TrailList = TL;
+
+            adapter.updateTrailList(TrailList);
+            adapter.notifyDataSetChanged();
+
+
+            updateWeatherData(); //ToDo: Change to update only new trail data (for efficiency)
+
+
+            long currentTime = CurrentUnixTime();
+            Log.d("TAG","Unix time:"+currentTime);
+
+            adapter = new TrailRecyclerAdapter(this, TrailList);
+            adapter.setClickListener(this);
+            recyclerView.setAdapter(adapter);
 
 
         }
@@ -318,7 +329,8 @@ public class MainActivity extends AppCompatActivity implements TrailRecyclerAdap
                 TrailList = new ArrayList<Trail>(getTrailsFromDB());
 
 
-                Toast.makeText(getApplicationContext(), "Saved to room DB", Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), "Saved to room DB", Toast.LENGTH_LONG).show();
+
             }
         }
 
