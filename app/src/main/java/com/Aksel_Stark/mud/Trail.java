@@ -10,6 +10,7 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 
+import java.util.ArrayList;
 
 
 import java.io.Serializable;
@@ -36,6 +37,8 @@ public class Trail implements Serializable {
 
     @ColumnInfo(name = "precipLastDay")
     double precipLastDay;
+
+
 
 
     Trail(String name_,double long_,double lat_){
@@ -116,4 +119,5 @@ public class Trail implements Serializable {
     public void setId(int id) {
         this.id = id;
     }
+
 }

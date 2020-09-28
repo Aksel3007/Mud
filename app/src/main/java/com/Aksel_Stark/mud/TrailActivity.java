@@ -11,7 +11,18 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 public class TrailActivity extends AppCompatActivity {
 
@@ -22,6 +33,12 @@ public class TrailActivity extends AppCompatActivity {
     Intent intentFromMain;
     Trail trail;
 
+    RequestQueue queue; //For Volley
+
+    ArrayList<String> rawWeatherData;
+
+    final int secsPrDay = 86400;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,10 +48,15 @@ public class TrailActivity extends AppCompatActivity {
         intentFromMain = getIntent();
         trail = getTrailFromDB();
 
+        rawWeatherData = new ArrayList<String>();
+        getWeatherData();
+
         trailName = findViewById(R.id.TrailName);
         RainLastDay = findViewById(R.id.RainLastDay);
         removeButton = findViewById(R.id.removeButton);
         backButton = findViewById(R.id.BackButton);
+
+
 
 
         trailName.setText(trail.getName());
@@ -129,5 +151,78 @@ public class TrailActivity extends AppCompatActivity {
         DeleteTrail dt = new DeleteTrail();
         dt.execute();
     }
+
+
+    //API Access and parsing________________________________________________________________________
+
+    private void getWeatherData(){ //get a weeks worth of weather data and parse it
+        long start = CurrentUnixTime();
+
+        for (int i = 0;i < 7; i++){
+            getJsonFromWeatherAPI(trail.getLatitude(),trail.getLongitude(),start,i);
+            start -= secsPrDay;
+        }
+
+    }
+
+
+    public void getJsonFromWeatherAPI(double lat, double lon, long start, final int index){ //Get weather data from api.
+        if(queue==null){
+            queue = Volley.newRequestQueue(this);
+        }
+
+        //API: https://openweathermap.org/history
+
+
+        //String url = "https://jobs.github.com/positions.json?description=" + search;
+
+        String apiKey = getResources().getString(R.string.apiKey);
+
+        //String url = "http://history.openweathermap.org/data/2.5/history/city?lat=+"+lat+"&lon="+lon+"&type=hour&start="+start+"&cnt="+cnt+"&appid="+apiKey;
+
+        String url = "https://api.darksky.net/forecast/"+apiKey+"/"+lat+","+lon+","+start;
+
+        Log.d("TAG","API URL " + url);
+
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        Log.d("TAG","Response recieved from api");
+
+
+                        rawWeatherData.add(response);
+
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.d("TAG", "Problem loading from API", error);
+            }
+        });
+        queue.add(stringRequest);
+    }
+
+
+    //Get current time in unix time
+    public long CurrentUnixTime(){
+        Calendar cal = Calendar.getInstance();
+
+        TimeZone timeZone = cal.getTimeZone();
+
+        Date cals = Calendar.getInstance(timeZone.getDefault()).getTime();
+
+        long milliseconds = cals.getTime();
+
+        milliseconds = milliseconds + timeZone.getOffset(milliseconds);
+
+        Log.d("TAG","Unix time: "+milliseconds / 1000L);
+
+        return milliseconds / 1000L;
+    }
+
+
 
 }
