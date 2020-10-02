@@ -50,6 +50,7 @@ public class TrailActivity extends AppCompatActivity {
     DataPoint[] hourlyPrecipDP = new DataPoint[168];
 
     final int secsPrDay = 86400;
+    int responseCount = 0;
 
 
     @Override
@@ -192,18 +193,21 @@ public class TrailActivity extends AppCompatActivity {
 
         Log.d("TAG","API URL " + url);
 
+
+
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) { //Runs when a response has been recieved from api
                         Log.d("TAG","Response recieved from api");
 
+                        responseCount++;
 
                         rawWeatherData.add(response);
                         dailyPrecip[index] = getPrecipDaily(response);
                         dailyPrecipDP[index] = new DataPoint(index,getPrecipDaily(response));
 
-                        if(index == 6){
+                        if(responseCount == 7){
                             dailyGraph.addSeries(new BarGraphSeries<>(dailyPrecipDP));
                         }
 
@@ -270,7 +274,7 @@ public class TrailActivity extends AppCompatActivity {
         try {
             reader = new JSONObject(weatherData);
 
-            JSONObject hourly = reader.getJSONObject("daily");
+            JSONObject hourly = reader.getJSONObject("hourly");
 
             JSONArray data = hourly.getJSONArray("data");
 
