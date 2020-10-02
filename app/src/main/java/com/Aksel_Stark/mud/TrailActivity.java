@@ -39,6 +39,7 @@ public class TrailActivity extends AppCompatActivity {
     Intent intentFromMain;
     Trail trail;
     GraphView dailyGraph;
+    GraphView hourlyGraph;
 
     RequestQueue queue; //For Volley
 
@@ -69,19 +70,11 @@ public class TrailActivity extends AppCompatActivity {
         removeButton = findViewById(R.id.removeButton);
         backButton = findViewById(R.id.BackButton);
         dailyGraph = (GraphView) findViewById(R.id.dailyGraph);
-
-
+        hourlyGraph = (GraphView) findViewById(R.id.hourlyGraph);
 
 
 
         trailName.setText(trail.getName());
-
-
-
-
-        int t = intentFromMain.getIntExtra("id",-1);
-
-
 
 
         removeButton.setOnClickListener(new View.OnClickListener() {
@@ -207,14 +200,16 @@ public class TrailActivity extends AppCompatActivity {
                         dailyPrecip[index] = getPrecipDaily(response);
                         dailyPrecipDP[index] = new DataPoint(index,getPrecipDaily(response));
 
-                        if(responseCount == 7){
-                            dailyGraph.addSeries(new BarGraphSeries<>(dailyPrecipDP));
-                        }
-
 
                         for(int i = 0;i < 24;i++){
                             hourlyPrecip[index*24+i] = getPrecipHourly(response,i);
+                            hourlyPrecipDP[index*24+i] = new DataPoint (index*24+i,getPrecipHourly(response,i));
+                        }
 
+
+                        if(responseCount == 7){
+                            dailyGraph.addSeries(new BarGraphSeries<>(dailyPrecipDP));
+                            hourlyGraph.addSeries(new BarGraphSeries<>(hourlyPrecipDP));
                         }
 
                     }
