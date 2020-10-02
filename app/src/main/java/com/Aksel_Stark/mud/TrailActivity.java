@@ -17,6 +17,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.BarGraphSeries;
+import com.jjoe64.graphview.series.DataPoint;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,10 +38,16 @@ public class TrailActivity extends AppCompatActivity {
     Button backButton;
     Intent intentFromMain;
     Trail trail;
+    GraphView dailyGraph;
 
     RequestQueue queue; //For Volley
 
     ArrayList<String> rawWeatherData;
+    double[] dailyPrecip = new double[7];
+    double[] hourlyPrecip = new double[168];
+    BarGraphSeries<DataPoint> dailyPrecipSeries;
+    DataPoint[] dailyPrecipDP = new DataPoint[7];
+    DataPoint[] hourlyPrecipDP = new DataPoint[168];
 
     final int secsPrDay = 86400;
 
@@ -55,6 +67,8 @@ public class TrailActivity extends AppCompatActivity {
         RainLastDay = findViewById(R.id.RainLastDay);
         removeButton = findViewById(R.id.removeButton);
         backButton = findViewById(R.id.BackButton);
+        dailyGraph = (GraphView) findViewById(R.id.dailyGraph);
+
 
 
 
@@ -158,8 +172,9 @@ public class TrailActivity extends AppCompatActivity {
     private void getWeatherData(){ //get a weeks worth of weather data and parse it
         long start = CurrentUnixTime();
 
-        for (int i = 0;i < 7; i++){
+        for (int i = 0;i < 7; i++){ //Gets weather data for current day, then previous day and so on
             getJsonFromWeatherAPI(trail.getLatitude(),trail.getLongitude(),start,i);
+
             start -= secsPrDay;
         }
 
@@ -171,29 +186,32 @@ public class TrailActivity extends AppCompatActivity {
             queue = Volley.newRequestQueue(this);
         }
 
-        //API: https://openweathermap.org/history
-
-
-        //String url = "https://jobs.github.com/positions.json?description=" + search;
-
         String apiKey = getResources().getString(R.string.apiKey);
-
-        //String url = "http://history.openweathermap.org/data/2.5/history/city?lat=+"+lat+"&lon="+lon+"&type=hour&start="+start+"&cnt="+cnt+"&appid="+apiKey;
 
         String url = "https://api.darksky.net/forecast/"+apiKey+"/"+lat+","+lon+","+start;
 
         Log.d("TAG","API URL " + url);
 
-
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
-                    public void onResponse(String response) {
+                    public void onResponse(String response) { //Runs when a response has been recieved from api
                         Log.d("TAG","Response recieved from api");
 
 
                         rawWeatherData.add(response);
+                        dailyPrecip[index] = getPrecipDaily(response);
+                        dailyPrecipDP[index] = new DataPoint(index,getPrecipDaily(response));
 
+                        if(index == 6){
+                            dailyGraph.addSeries(new BarGraphSeries<>(dailyPrecipDP));
+                        }
+
+
+                        for(int i = 0;i < 24;i++){
+                            hourlyPrecip[index*24+i] = getPrecipHourly(response,i);
+
+                        }
 
                     }
                 }, new Response.ErrorListener() {
@@ -224,5 +242,47 @@ public class TrailActivity extends AppCompatActivity {
     }
 
 
+
+    public double getPrecipDaily(String weatherData){//
+        double fullPrecip = 0;
+        JSONObject reader;
+        try {
+            reader = new JSONObject(weatherData);
+
+            JSONObject daily = reader.getJSONObject("daily");
+
+            JSONArray data = daily.getJSONArray("data");
+
+            JSONObject zero = data.getJSONObject(0);
+
+            fullPrecip = zero.getDouble("precipIntensity");
+        }
+        catch(Exception e){
+            Log.d("TAG","Error reading from json weather data:"+e);
+            return -1;
+        }
+        return fullPrecip*24;
+    }
+
+    public double getPrecipHourly(String weatherData, int hourIndex){//
+        double Precip = 0;
+        JSONObject reader;
+        try {
+            reader = new JSONObject(weatherData);
+
+            JSONObject hourly = reader.getJSONObject("daily");
+
+            JSONArray data = hourly.getJSONArray("data");
+
+            JSONObject hour = data.getJSONObject(hourIndex);
+
+            Precip = hour.getDouble("precipIntensity");
+        }
+        catch(Exception e){
+            Log.d("TAG","Error reading from json weather data:"+e);
+            return -1;
+        }
+        return Precip;
+    }
 
 }
