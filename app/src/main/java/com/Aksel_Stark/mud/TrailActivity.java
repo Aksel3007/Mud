@@ -69,9 +69,16 @@ public class TrailActivity extends AppCompatActivity {
         RainLastDay = findViewById(R.id.RainLastDay);
         removeButton = findViewById(R.id.removeButton);
         backButton = findViewById(R.id.BackButton);
-        dailyGraph = (GraphView) findViewById(R.id.dailyGraph);
-        hourlyGraph = (GraphView) findViewById(R.id.hourlyGraph);
 
+        //Setup graphs
+        dailyGraph = (GraphView) findViewById(R.id.dailyGraph);
+        dailyGraph.getViewport().setXAxisBoundsManual(true);
+        dailyGraph.getViewport().setMaxX(6.5);
+        dailyGraph.getViewport().setMinX(-0.5);
+        hourlyGraph = (GraphView) findViewById(R.id.hourlyGraph);
+        hourlyGraph.getViewport().setXAxisBoundsManual(true);
+        hourlyGraph.getViewport().setMinX(-0.5);
+        hourlyGraph.getViewport().setMaxX(47.5);
 
 
         trailName.setText(trail.getName());
