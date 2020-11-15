@@ -20,6 +20,8 @@ import com.android.volley.toolbox.Volley;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.BarGraphSeries;
 import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
+
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -72,13 +74,29 @@ public class TrailActivity extends AppCompatActivity {
 
         //Setup graphs
         dailyGraph = (GraphView) findViewById(R.id.dailyGraph);
+
+        // set manual x bounds to have nice steps
+        dailyGraph.getViewport().setMinX((CurrentUnixTime()-604800)*1000); //current time minus seconds in a week
+        dailyGraph.getViewport().setMaxX(CurrentUnixTime()*1000);
         dailyGraph.getViewport().setXAxisBoundsManual(true);
-        dailyGraph.getViewport().setMaxX(6.5);
-        dailyGraph.getViewport().setMinX(-0.5);
+
+        //dailyGraph.getViewport().setMaxX(6.5);
+        //dailyGraph.getViewport().setMinX(-0.5);
+        dailyGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(this)); //Initializing date as x-axis
+        dailyGraph.getGridLabelRenderer().setNumHorizontalLabels(3); // Limit legends on x-axis
+        dailyGraph.getGridLabelRenderer().setHumanRounding(false); //Don't round dates
+
         hourlyGraph = (GraphView) findViewById(R.id.hourlyGraph);
+        // set manual x bounds to have nice steps
+        hourlyGraph.getViewport().setMinX((CurrentUnixTime()-172800)*1000); //current time minus seconds in 2 days
+        hourlyGraph.getViewport().setMaxX(CurrentUnixTime()*1000);
         hourlyGraph.getViewport().setXAxisBoundsManual(true);
-        hourlyGraph.getViewport().setMinX(-0.5);
-        hourlyGraph.getViewport().setMaxX(47.5);
+        hourlyGraph.getGridLabelRenderer().setLabelFormatter(new DateAsXAxisLabelFormatter(this)); //Initializing date as x-axis
+        hourlyGraph.getGridLabelRenderer().setNumHorizontalLabels(3); // Limit legends on x-axis
+        hourlyGraph.getGridLabelRenderer().setHumanRounding(false); //Don't round dates
+
+
+
 
 
         trailName.setText(trail.getName());
@@ -182,7 +200,7 @@ public class TrailActivity extends AppCompatActivity {
     }
 
 
-    public void getJsonFromWeatherAPI(double lat, double lon, long start, final int index){ //Get weather data from api.
+    public void getJsonFromWeatherAPI(double lat, double lon,final long start, final int index){ //Get weather data from api.
         if(queue==null){
             queue = Volley.newRequestQueue(this);
         }
@@ -204,17 +222,28 @@ public class TrailActivity extends AppCompatActivity {
                         responseCount++;
 
                         rawWeatherData.add(response);
+
+                        Date dailyDate = new Date(getTimeHourly(response,0)*1000);
                         dailyPrecip[index] = getPrecipDaily(response);
-                        dailyPrecipDP[index] = new DataPoint(index,getPrecipDaily(response));
+                        dailyPrecipDP[index] = new DataPoint(dailyDate,getPrecipDaily(response));
+
 
 
                         for(int i = 0;i < 24;i++){
+
+                            //Check if current datapoint represent current hour
+                            //if((start-3600) <= getTimeHourly(response,i) && (getTimeHourly(response,i) < start)){}
+
+                            Date datapointDate = new Date(getTimeHourly(response,i)*1000);
+
                             hourlyPrecip[index*24+i] = getPrecipHourly(response,i);
-                            hourlyPrecipDP[index*24+i] = new DataPoint (index*24+i,getPrecipHourly(response,i));
+                            hourlyPrecipDP[index*24+i] = new DataPoint (datapointDate,getPrecipHourly(response,i));
+
+
                         }
 
 
-                        if(responseCount == 7){
+                        if(responseCount == 7){ //Data might not come in chronological order, so graphs are loaded when a full weeks data is in
                             dailyGraph.addSeries(new BarGraphSeries<>(dailyPrecipDP));
                             hourlyGraph.addSeries(new BarGraphSeries<>(hourlyPrecipDP));
                         }
@@ -290,5 +319,33 @@ public class TrailActivity extends AppCompatActivity {
         }
         return Precip;
     }
+
+    public long getTimeHourly(String weatherData, int hourIndex){//
+        long time = 0;
+        JSONObject reader;
+        try {
+            reader = new JSONObject(weatherData);
+
+            JSONObject hourly = reader.getJSONObject("hourly");
+
+            JSONArray data = hourly.getJSONArray("data");
+
+            JSONObject hour = data.getJSONObject(hourIndex);
+
+            time = hour.getLong("time");
+
+
+        }
+        catch(Exception e){
+            Log.d("TAG","Error reading from json weather data:"+e);
+            return -1;
+        }
+        return time;
+    }
+
+
+
+
+
 
 }
